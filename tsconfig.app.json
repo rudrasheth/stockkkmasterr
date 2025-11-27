@@ -1,0 +1,36 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOMIterable"],
+    "module": "ESNext",
+    
+    // --- Crucial Fixes for External Libraries ---
+    
+    // 1. Explicitly skip type checking for installed libraries (fixes the toastify error)
+    "skipLibCheck": true, 
+    
+    // 2. Ensures compatibility when importing JavaScript libraries (like react-toastify)
+    "allowSyntheticDefaultImports": true, 
+    "esModuleInterop": true,
+
+    // ---------------------------------------------
+    
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    
+    /* Strictness and Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
