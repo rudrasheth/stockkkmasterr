@@ -1,19 +1,3 @@
-// VERCEL DEPLOYMENT CONFIG
-// ========================
-// This file tells Vercel how to build and deploy your app.
-//
-// IMPORTANT: Before deploying, set these Environment Variables in Vercel Dashboard:
-//   1. DB_CONNECT_STRING = your MongoDB Atlas connection string
-//   2. EMAIL_USER = your Gmail (optional)
-//   3. EMAIL_PASS = your Gmail App Password (optional)
-//   4. GEMINI_API_KEY = Google AI key (optional)
-//
-// Vercel will:
-// - Build frontend from /src → output to /src/dist
-// - Deploy serverless functions from /api folder
-// - Route /api/* to serverless handlers
-// - Route everything else to /src/dist/index.html (SPA fallback)
-//
 {
   "version": 2,
   "buildCommand": "cd src && npm install && npm run build",
