@@ -1,0 +1,37 @@
+// ============================================
+// ROOT PACKAGE.JSON (Serverless API Dependencies)
+// ============================================
+//
+// DEPLOYMENT INSTRUCTIONS:
+// 1. Push this repo to GitHub
+// 2. Go to https://vercel.com and create a new project
+// 3. Select your GitHub repository
+// 4. Vercel will auto-detect the setup
+// 5. Add Environment Variables in Vercel Dashboard:
+//    - DB_CONNECT_STRING: your MongoDB connection string
+//    - EMAIL_USER: your Gmail (optional)
+//    - EMAIL_PASS: your Gmail App Password (optional)
+//    - GEMINI_API_KEY: your Google AI key (optional)
+// 6. Click Deploy!
+//
+// For detailed instructions, see VERCEL_DEPLOY.md
+//
+{
+  "name": "stockmaster-api",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "@vercel/node": "^3.0.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.2.1",
+    "nodemailer": "^6.9.12"
+  }
+}

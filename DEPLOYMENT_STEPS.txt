@@ -1,0 +1,25 @@
+// ============================================
+// DEPLOYMENT COMMENTS FOR VERCEL
+// ============================================
+//
+// 1. BEFORE DEPLOYING:
+//    - Push this repo to GitHub
+//    - Go to https://vercel.com
+//    - Create a new project from your GitHub repo
+//
+// 2. IN VERCEL DASHBOARD, set Environment Variables:
+//    - DB_CONNECT_STRING: mongodb+srv://user:pass@cluster.mongodb.net/dbname
+//      (Get from MongoDB Atlas: https://www.mongodb.com/cloud/atlas)
+//    - EMAIL_USER: your-gmail@gmail.com (OPTIONAL)
+//    - EMAIL_PASS: your-app-password (OPTIONAL, from Google Account Settings)
+//    - GEMINI_API_KEY: your-api-key (OPTIONAL, from https://ai.google.dev)
+//
+// 3. VERCEL WILL AUTO-DETECT:
+//    - Build Command: cd src && npm install && npm run build
+//    - Output Directory: src/dist
+//    - Root Directory: (leave blank)
+//    - Serverless Functions: /api folder
+//
+// 4. CLICK DEPLOY and your app will be live!
+//
+// ============================================

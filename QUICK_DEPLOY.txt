@@ -1,0 +1,103 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    VERCEL DEPLOYMENT - QUICK REFERENCE                          ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+STEP 1: Push to GitHub
+─────────────────────
+  git add .
+  git commit -m "Ready for Vercel: full-stack deployment"
+  git push origin main
+
+STEP 2: Create Vercel Project
+──────────────────────────────
+  1. Go to https://vercel.com
+  2. Sign up / log in
+  3. Click "New Project"
+  4. Select your GitHub repository
+
+STEP 3: Set Environment Variables
+──────────────────────────────────
+  In Vercel Project Settings → Environment Variables, add:
+
+  ✅ REQUIRED:
+     DB_CONNECT_STRING = mongodb+srv://user:pass@cluster.mongodb.net/dbname
+
+  ⚠️  OPTIONAL (email features):
+     EMAIL_USER = your-gmail@gmail.com
+     EMAIL_PASS = your-gmail-app-password (from Google Account Settings)
+
+  ⚠️  OPTIONAL (AI chat features):
+     GEMINI_API_KEY = your-google-ai-key (from https://ai.google.dev)
+
+STEP 4: Deploy
+──────────────
+  - Vercel will auto-detect: Vite frontend + serverless API
+  - Build Command: cd src && npm install && npm run build
+  - Output Directory: src/dist
+  - Click "Deploy"
+
+RESULT
+──────
+  Your app will be live at: https://your-project-name.vercel.app
+
+  ✅ Frontend served from CDN (fast)
+  ✅ Backend running as serverless functions (scalable)
+  ✅ Database connected to MongoDB (reliable)
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+GETTING MONGODB ATLAS (Free Tier):
+──────────────────────────────────
+  1. Go to https://www.mongodb.com/cloud/atlas
+  2. Sign up / log in
+  3. Click "Create" → "Build a Cluster"
+  4. Choose "M0 FREE" tier
+  5. Click "Connect"
+  6. Create a database user (username/password)
+  7. Whitelist your IP (or allow all: 0.0.0.0/0)
+  8. Copy the connection string
+  9. Paste into Vercel as DB_CONNECT_STRING
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+GETTING GMAIL APP PASSWORD (For email features):
+─────────────────────────────────────────────────
+  1. Go to https://myaccount.google.com/apppasswords
+  2. Sign in with your Gmail account
+  3. Select "Mail" and "Windows Computer"
+  4. Google will generate a 16-character password
+  5. Copy it and paste as EMAIL_PASS in Vercel
+  6. Also set EMAIL_USER to your Gmail address
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+GETTING GOOGLE GENERATIVE AI KEY (For AI chat):
+────────────────────────────────────────────────
+  1. Go to https://ai.google.dev
+  2. Click "Get API Key"
+  3. Create a new project (or select existing)
+  4. Copy the API key
+  5. Paste as GEMINI_API_KEY in Vercel
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING
+───────────────
+  ❌ "DB_CONNECT_STRING is not defined"
+     → Go to Vercel Project Settings → Environment Variables
+     → Confirm DB_CONNECT_STRING is set
+     → Redeploy
+
+  ❌ API endpoints return 404
+     → Check Vercel build logs for errors
+     → Verify /api/*.ts files exist
+
+  ❌ Email not working
+     → Use Gmail App Password, not regular password
+     → Verify EMAIL_USER and EMAIL_PASS are correct
+
+  ❌ AI chat returns 503
+     → GEMINI_API_KEY is optional
+     → If not set, AI features are disabled (by design)
+
+═══════════════════════════════════════════════════════════════════════════════════
