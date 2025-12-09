@@ -146,6 +146,8 @@ const Product = mongoose.models.Product || mongoose.model('Product', ProductSche
 const ReceiptSchema = new mongoose.Schema({
   receiptNo: String,
   vendorId: String,
+  productId: String,
+  quantity: Number,
   items: Array,
   status: { type: String, default: 'pending' },
   createdAt: { type: Date, default: Date.now }
@@ -156,6 +158,8 @@ const Receipt = mongoose.models.Receipt || mongoose.model('Receipt', ReceiptSche
 const DeliverySchema = new mongoose.Schema({
   deliveryNo: String,
   customer: String,
+  productId: String,
+  quantity: Number,
   items: Array,
   status: { type: String, default: 'pending' },
   createdAt: { type: Date, default: Date.now }
@@ -200,6 +204,10 @@ const PaymentSchema = new mongoose.Schema({
   amount: Number,
   status: String,
   method: String,
+  gateway: { type: String, default: 'mock' },
+  payerEmail: String,
+  transactionId: String,
+  currency: { type: String, default: 'INR' },
   dueDate: Date,
   reference: String,
   notes: String,
@@ -667,11 +675,17 @@ const receiptsPostHandler = async (req: express.Request, res: express.Response) 
       return res.status(400).json({ message: 'Quantity must be greater than 0' });
     }
 
-    // Update product stock in memory (increase stock for receipt)
+    // Update product stock (memory or DB)
     if (productId && quantity) {
-      const product = memory.products.find(p => p.id === productId);
-      if (product) {
-        product.stock = (product.stock || 0) + quantity;
+      if (USE_MEMORY) {
+        const product = memory.products.find(p => p.id === productId);
+        if (product) {
+          product.stock = (product.stock || 0) + quantity;
+        }
+      } else {
+        const product = await Product.findById(productId);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        await Product.findByIdAndUpdate(productId, { $inc: { stock: quantity } });
       }
     }
 
@@ -687,7 +701,7 @@ const receiptsPostHandler = async (req: express.Request, res: express.Response) 
     };
     memory.receipts.push(memoryReceipt);
     
-    // Background DB save without custom _id
+    // Save to DB when available
     if (!USE_MEMORY && MONGO_URI) {
       const dbPayload = {
         receiptNo,
@@ -698,15 +712,8 @@ const receiptsPostHandler = async (req: express.Request, res: express.Response) 
         status: 'completed',
         createdAt: new Date()
       };
-      
-      // Also update product stock in DB
-      if (productId) {
-        Product.findByIdAndUpdate(productId, { $inc: { stock: quantity } }).catch(err => 
-          console.log('Background product stock update skipped:', err.message)
-        );
-      }
-      
-      Receipt.create(dbPayload).catch(err => console.log('Background DB save skipped:', err.message));
+      const doc = await Receipt.create(dbPayload);
+      return res.status(201).json(doc);
     }
 
     return res.status(201).json(memoryReceipt);
@@ -746,15 +753,21 @@ const deliveriesPostHandler = async (req: express.Request, res: express.Response
 
     // Check if product has sufficient stock
     if (productId && quantity) {
-      const product = memory.products.find(p => p.id === productId);
-      if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
+      if (USE_MEMORY) {
+        const product = memory.products.find(p => p.id === productId);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        if ((product.stock || 0) < quantity) {
+          return res.status(400).json({ message: `Insufficient stock. Available: ${product.stock || 0}` });
+        }
+        product.stock = (product.stock || 0) - quantity;
+      } else {
+        const product = await Product.findById(productId);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        if ((product.stock || 0) < quantity) {
+          return res.status(400).json({ message: `Insufficient stock. Available: ${product.stock || 0}` });
+        }
+        await Product.findByIdAndUpdate(productId, { $inc: { stock: -quantity } });
       }
-      if ((product.stock || 0) < quantity) {
-        return res.status(400).json({ message: `Insufficient stock. Available: ${product.stock || 0}` });
-      }
-      // Decrease stock for delivery
-      product.stock = (product.stock || 0) - quantity;
     }
 
     const memoryDelivery = { 
@@ -769,7 +782,7 @@ const deliveriesPostHandler = async (req: express.Request, res: express.Response
     };
     memory.deliveries.push(memoryDelivery);
     
-    // Background DB save without custom _id
+    // Save to DB when available
     if (!USE_MEMORY && MONGO_URI) {
       const dbPayload = {
         deliveryNo,
@@ -780,15 +793,8 @@ const deliveriesPostHandler = async (req: express.Request, res: express.Response
         status: 'completed',
         createdAt: new Date()
       };
-      
-      // Also update product stock in DB (decrease)
-      if (productId) {
-        Product.findByIdAndUpdate(productId, { $inc: { stock: -quantity } }).catch(err => 
-          console.log('Background product stock update skipped:', err.message)
-        );
-      }
-      
-      Delivery.create(dbPayload).catch(err => console.log('Background DB save skipped:', err.message));
+      const doc = await Delivery.create(dbPayload);
+      return res.status(201).json(doc);
     }
 
     return res.status(201).json(memoryDelivery);
@@ -988,10 +994,155 @@ async function paymentsPostHandler(req: express.Request, res: express.Response) 
   }
 }
 
+async function paymentsCheckoutHandler(req: express.Request, res: express.Response) {
+  try {
+    await init();
+    const { invoice, amount, method, email } = req.body;
+    if (!invoice || !amount) {
+      return res.status(400).json({ message: 'Invoice and amount are required' });
+    }
+
+    const transactionId = `pay_${Date.now().toString(36)}${Math.floor(Math.random()*9999)}`;
+    const record = {
+      invoiceNo: invoice,
+      type: 'online',
+      amount: Number(amount),
+      status: 'paid',
+      method: method || 'card',
+      gateway: 'mock',
+      payerEmail: email,
+      transactionId,
+      reference: transactionId,
+      currency: 'INR',
+      createdAt: new Date()
+    };
+
+    if (USE_MEMORY) {
+      const doc = { id: transactionId, ...record };
+      memory.payments.push(doc);
+      return res.status(201).json(doc);
+    }
+
+    const doc = await Payment.create(record);
+    return res.status(201).json(doc);
+  } catch (err: any) {
+    console.error('POST /payments/checkout error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 app.get('/payments', paymentsGetHandler);
 app.get('/api/payments', paymentsGetHandler);
 app.post('/payments', paymentsPostHandler);
 app.post('/api/payments', paymentsPostHandler);
+app.post('/payments/checkout', paymentsCheckoutHandler);
+app.post('/api/payments/checkout', paymentsCheckoutHandler);
+
+// Razorpay integration
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_dummy';
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'dummy_secret';
+
+const razorpay = new Razorpay({
+  key_id: RAZORPAY_KEY_ID,
+  key_secret: RAZORPAY_KEY_SECRET
+});
+
+async function createOrderHandler(req: express.Request, res: express.Response) {
+  try {
+    const { amount, currency, receipt } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
+
+    const options = {
+      amount: amount,
+      currency: currency || 'INR',
+      receipt: receipt || `receipt_${Date.now()}`,
+      payment_capture: 1
+    };
+
+    const order = await razorpay.orders.create(options);
+    
+    res.json({
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key_id: RAZORPAY_KEY_ID
+    });
+  } catch (err: any) {
+    console.error('Create order error:', err);
+    res.status(500).json({ message: err.message || 'Failed to create order' });
+  }
+}
+
+async function verifyPaymentHandler(req: express.Request, res: express.Response) {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      invoice,
+      email,
+      method
+    } = req.body;
+
+    const sign = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac('sha256', RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest('hex');
+
+    if (razorpay_signature !== expectedSign) {
+      return res.status(400).json({ message: 'Invalid signature' });
+    }
+
+    const payment = await razorpay.payments.fetch(razorpay_payment_id);
+
+    const record = {
+      invoiceNo: invoice,
+      type: 'online',
+      amount: payment.amount / 100,
+      status: 'paid',
+      method: method || payment.method,
+      gateway: 'razorpay',
+      payerEmail: email || payment.email,
+      transactionId: razorpay_payment_id,
+      reference: razorpay_order_id,
+      currency: payment.currency,
+      notes: `Razorpay payment ${razorpay_payment_id}`,
+      createdAt: new Date()
+    };
+
+    if (USE_MEMORY) {
+      const doc = { id: razorpay_payment_id, ...record };
+      memory.payments.push(doc);
+      return res.json({ success: true, payment: doc });
+    }
+
+    const doc = await Payment.create(record);
+    res.json({ success: true, payment: doc });
+  } catch (err: any) {
+    console.error('Verify payment error:', err);
+    res.status(500).json({ message: err.message || 'Verification failed' });
+  }
+}
+
+app.post('/payments/create-order', createOrderHandler);
+app.post('/api/payments/create-order', createOrderHandler);
+app.post('/payments/verify', verifyPaymentHandler);
+app.post('/api/payments/verify', verifyPaymentHandler);
+
+// Config endpoints
+app.get('/config/mapbox', (req, res) => {
+  res.json({ token: process.env.MAPBOX_ACCESS_TOKEN || 'pk.fallback_token' });
+});
+app.get('/api/config/mapbox', (req, res) => {
+  res.json({ token: process.env.MAPBOX_ACCESS_TOKEN || 'pk.fallback_token' });
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
