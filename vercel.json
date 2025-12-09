@@ -6,6 +6,7 @@
     { "src": "/login", "dest": "/src/dist/index.html" },
     { "src": "/app", "dest": "/src/dist/app.html" },
     { "src": "/app/(.*)", "dest": "/src/dist/app.html" },
+    { "src": "/warehouse3d", "dest": "/src/dist/warehouse3d.html" },
     { "src": "/assets/(.*)", "dest": "/src/dist/assets/$1" },
     { "src": "/favicon.ico", "dest": "/src/dist/favicon.ico" },
     { "src": "/robots.txt", "dest": "/src/dist/robots.txt" },
