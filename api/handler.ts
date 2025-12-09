@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -1039,16 +1040,20 @@ app.post('/payments/checkout', paymentsCheckoutHandler);
 app.post('/api/payments/checkout', paymentsCheckoutHandler);
 
 // Razorpay integration
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
+let Razorpay: any;
+try {
+  Razorpay = require('razorpay');
+} catch (err) {
+  console.warn('Razorpay not installed, using mock mode');
+}
 
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_dummy';
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'dummy_secret';
 
-const razorpay = new Razorpay({
+const razorpay = Razorpay ? new Razorpay({
   key_id: RAZORPAY_KEY_ID,
   key_secret: RAZORPAY_KEY_SECRET
-});
+}) : null;
 
 async function createOrderHandler(req: express.Request, res: express.Response) {
   try {
@@ -1056,6 +1061,10 @@ async function createOrderHandler(req: express.Request, res: express.Response) {
     
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
+    }
+
+    if (!razorpay) {
+      return res.status(503).json({ message: 'Payment gateway not configured' });
     }
 
     const options = {
@@ -1098,6 +1107,10 @@ async function verifyPaymentHandler(req: express.Request, res: express.Response)
 
     if (razorpay_signature !== expectedSign) {
       return res.status(400).json({ message: 'Invalid signature' });
+    }
+
+    if (!razorpay) {
+      return res.status(503).json({ message: 'Payment gateway not configured' });
     }
 
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
