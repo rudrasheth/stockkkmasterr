@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import handler from './handler';
+// @ts-nocheck
+import handler from './handler.js';
 
 // Re-export the handler as `api/index.ts` so Vercel routes like `/api/*` can
 // be directed to this single serverless function file.
