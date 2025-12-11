@@ -1,17 +1,18 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "src/api/index.ts", "use": "@vercel/node" },
+    { "src": "src/dist/**/*", "use": "@vercel/static" }
+  ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/handler.ts" },
-    { "src": "/", "dest": "/src/dist/index.html" },
-    { "src": "/login", "dest": "/src/dist/index.html" },
-    { "src": "/app", "dest": "/src/dist/app.html" },
-    { "src": "/app/(.*)", "dest": "/src/dist/app.html" },
-    { "src": "/warehouse3d", "dest": "/src/dist/warehouse3d.html" },
-    { "src": "/assets/(.*)", "dest": "/src/dist/assets/$1" },
-    { "src": "/favicon.ico", "dest": "/src/dist/favicon.ico" },
-    { "src": "/robots.txt", "dest": "/src/dist/robots.txt" },
+    { "src": "/api/(.*)", "dest": "/src/api/index.ts" },
     { "handle": "filesystem" },
-    { "src": "/(.*\\.(js|css|map|json|svg|png|jpg|jpeg|webp|ico|txt))$", "dest": "/src/dist/$1" },
-    { "src": "/(.*)", "dest": "/src/dist/index.html" }
+    { "src": "/ml-hub", "dest": "/src/dist/ml-hub.html" },
+    { "src": "/warehouse-compact", "dest": "/src/dist/warehouse-compact.html" },
+    { "src": "/warehouse3d", "dest": "/src/dist/warehouse3d.html" },
+    { "src": "/app", "dest": "/src/dist/app.html" },
+    { "src": "/login", "dest": "/src/dist/index.html" },
+    { "src": "/", "dest": "/src/dist/index.html" },
+    { "src": "/(.*)", "dest": "/src/dist/$1" }
   ]
 }

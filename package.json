@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
+  "scripts": {
+    "build": "tsc || true",
+    "start": "node src/api/index.js"
+  },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
