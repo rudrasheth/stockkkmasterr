@@ -10,6 +10,7 @@
     { "src": "/ml-hub", "dest": "/src/dist/ml-hub.html" },
     { "src": "/warehouse-compact", "dest": "/src/dist/warehouse-compact.html" },
     { "src": "/warehouse3d", "dest": "/src/dist/warehouse3d.html" },
+    { "src": "/locations-map", "dest": "/src/dist/locations-map.html" },
     { "src": "/app", "dest": "/src/dist/app.html" },
     { "src": "/login", "dest": "/src/dist/index.html" },
     { "src": "/", "dest": "/src/dist/index.html" },
