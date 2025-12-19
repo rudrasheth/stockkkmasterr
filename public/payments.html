@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments - StockMaster</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; color: white; }
+    .header h1 { font-size: 32px; font-weight: 700; }
+    .back-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; text-decoration: none; display: inline-block; }
+    .back-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 30px; }
+    .pricing-card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transition: all 0.3s; position: relative; overflow: hidden; }
+    .pricing-card:hover { transform: translateY(-8px); box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
+    .pricing-card.featured { border: 3px solid #667eea; }
+    .badge { position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .plan-name { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+    .price { font-size: 48px; font-weight: 800; color: #667eea; margin-bottom: 8px; }
+    .price span { font-size: 18px; color: #64748b; font-weight: 400; }
+    .features { list-style: none; margin: 24px 0; }
+    .features li { padding: 12px 0; color: #475569; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #e2e8f0; }
+    .features li:last-child { border-bottom: none; }
+    .features li::before { content: "✓"; color: #10b981; font-weight: 700; font-size: 18px; }
+    .buy-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+    .buy-btn:hover { transform: scale(1.02); box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4); }
+    .buy-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .transaction-section { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin-top: 30px; }
+    .section-title { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 20px; }
+    .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #667eea; }
+    .transaction-info { flex: 1; }
+    .transaction-title { font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+    .transaction-meta { font-size: 13px; color: #64748b; }
+    .transaction-amount { font-size: 20px; font-weight: 700; color: #667eea; }
+    .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-left: 12px; }
+    .status-badge.success { background: #d1fae5; color: #065f46; }
+    .status-badge.pending { background: #fef3c7; color: #92400e; }
+    .empty-state { text-align: center; padding: 40px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💳 Payment Plans</h1>
+      <a href="/app" class="back-btn">← Back to Dashboard</a>
+    </div>
+    <div class="grid">
+      <div class="pricing-card"><div class="plan-name">Basic</div><div class="price">₹99<span>/month</span></div>
+        <ul class="features"><li>Up to 100 Products</li><li>5 Locations</li><li>Basic Analytics</li><li>Email Support</li><li>1 User Account</li></ul>
+        <button class="buy-btn" onclick="initiatePayment('basic', 99)">Choose Basic</button>
+      </div>
+      <div class="pricing-card featured"><span class="badge">POPULAR</span><div class="plan-name">Professional</div><div class="price">₹299<span>/month</span></div>
+        <ul class="features"><li>Up to 1000 Products</li><li>Unlimited Locations</li><li>Advanced ML Analytics</li><li>Priority Support</li><li>5 User Accounts</li><li>API Access</li><li>Custom Reports</li></ul>
+        <button class="buy-btn" onclick="initiatePayment('pro', 299)">Choose Professional</button>
+      </div>
+      <div class="pricing-card"><div class="plan-name">Enterprise</div><div class="price">₹999<span>/month</span></div>
+        <ul class="features"><li>Unlimited Products</li><li>Unlimited Locations</li><li>Full ML Suite</li><li>24/7 Support</li><li>Unlimited Users</li><li>API Access</li><li>Custom Integration</li><li>Dedicated Manager</li><li>White Label Option</li></ul>
+        <button class="buy-btn" onclick="initiatePayment('enterprise', 999)">Choose Enterprise</button>
+      </div>
+    </div>
+    <div class="transaction-section"><div class="section-title">Recent Transactions</div><div id="transactionsList"><div class="empty-state">No transactions yet. Choose a plan above to get started!</div></div></div>
+  </div>
+<script>
+  const API_BASE = '/api';
+  async function initiatePayment(plan, amount) {
+    try {
+      const response = await fetch(`${API_BASE}/payments/create-order`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ amount: amount*100, currency:'INR', notes:{plan} })
+      });
+      if(!response.ok){ const err = await response.text(); alert('Failed to create order: '+err); return; }
+      const order = await response.json();
+      // Support both handler shapes
+      const orderId = order.id || order.order_id;
+      const keyId = order.key || order.key_id;
+      const isDemo = order.demo || keyId === 'rzp_test_demo_mode' || keyId === 'rzp_test_dummy' || keyId === 'rzp_test_demo';
+      if(isDemo){
+        await fetch(`${API_BASE}/payments/verify`,{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ razorpay_order_id: orderId, razorpay_payment_id: `demo_${Date.now()}`, demo:true, plan, amount })
+        });
+        alert('✓ Payment (Demo) Successful! Your '+plan+' plan is now active.');
+        addTransaction(plan, amount, 'success', 'demo');
+        loadTransactions();
+        return;
+      }
+      const options={ key:keyId, amount: order.amount, currency: order.currency, name:'StockMaster', description:`${plan.charAt(0).toUpperCase()+plan.slice(1)} Plan - Monthly Subscription`, order_id: orderId,
+        handler: async function(resp){ try{ const verify= await fetch(`${API_BASE}/payments/verify`,{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ razorpay_order_id: resp.razorpay_order_id, razorpay_payment_id: resp.razorpay_payment_id, razorpay_signature: resp.razorpay_signature, plan, amount }) }); const result = await verify.json(); if(verify.ok && result.success){ alert('✓ Payment Successful! Your '+plan+' plan is now active.'); } else { alert('Payment captured, verification pending.'); } addTransaction(plan, amount, 'success', resp.razorpay_payment_id); loadTransactions(); } catch(e){ console.error('Verification error:', e); alert('Payment received; we will verify shortly.'); } },
+        prefill:{ name: localStorage.getItem('userName')||'User', email: localStorage.getItem('userEmail')||'user@example.com', contact:'9999999999' }, notes:{ plan, amount }, theme:{ color:'#667eea' } };
+      const rzp = new Razorpay(options); rzp.on('payment.failed', function(r){ alert('✗ Payment Failed\n\nError: '+r.error.description+'\n\nPlease try again.'); console.error('Payment failed:', r.error); }); rzp.open();
+    } catch(error){ console.error('Payment error:', error); alert('Payment initiation failed: '+error.message); }
+  }
+  function addTransaction(plan, amount, status, paymentId='') { const transactions = JSON.parse(localStorage.getItem('transactions')||'[]'); transactions.unshift({ id: paymentId || Date.now(), plan: plan.charAt(0).toUpperCase()+plan.slice(1), amount, status, date: new Date().toISOString() }); localStorage.setItem('transactions', JSON.stringify(transactions.slice(0,50))); }
+  function loadTransactions(){ const transactions = JSON.parse(localStorage.getItem('transactions')||'[]'); const container = document.getElementById('transactionsList'); if(transactions.length===0){ container.innerHTML = '<div class="empty-state">No transactions yet. Choose a plan above to get started!</div>'; return; } container.innerHTML = transactions.map(t=>`<div class="transaction-item"><div class="transaction-info"><div class="transaction-title">${t.plan.charAt(0).toUpperCase()+t.plan.slice(1)} Plan</div><div class="transaction-meta">${new Date(t.date).toLocaleString()}</div></div><div class="transaction-amount">₹${t.amount}</div><span class="status-badge ${t.status}">${t.status==='success'?'Completed':'Pending'}</span></div>`).join(''); }
+  loadTransactions();
+</script>
+</body>
+</html>
