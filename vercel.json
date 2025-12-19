@@ -2,7 +2,8 @@
   "version": 2,
   "builds": [
     { "src": "src/api/index.ts", "use": "@vercel/node" },
-    { "src": "src/dist/**/*", "use": "@vercel/static" }
+    { "src": "src/dist/app.html", "use": "@vercel/static" },
+    { "src": "src/dist/payments.html", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/src/api/index.ts" },
@@ -12,6 +13,7 @@
     { "src": "/warehouse3d", "dest": "/src/dist/warehouse3d.html" },
     { "src": "/locations-map", "dest": "/src/dist/locations-map.html" },
     { "src": "/app", "dest": "/src/dist/app.html" },
+    { "src": "/payments.html", "dest": "/src/dist/payments.html" },
     { "src": "/login", "dest": "/src/dist/index.html" },
     { "src": "/", "dest": "/src/dist/index.html" },
     { "src": "/(.*)", "dest": "/src/dist/$1" }
