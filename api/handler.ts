@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { createRequire } from 'module';
 
 dotenv.config();
 
@@ -1041,11 +1042,13 @@ app.post('/payments/checkout', paymentsCheckoutHandler);
 app.post('/api/payments/checkout', paymentsCheckoutHandler);
 
 // Razorpay integration
+// Support importing CommonJS Razorpay from ESM context
 let Razorpay: any;
 try {
-  Razorpay = require('razorpay');
+  const req = createRequire(import.meta.url);
+  Razorpay = req('razorpay');
 } catch (err) {
-  console.warn('Razorpay not installed, using mock mode');
+  console.warn('Razorpay not installed or failed to import, using mock mode');
 }
 
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_dummy';
